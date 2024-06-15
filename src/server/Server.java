@@ -31,7 +31,9 @@ public class Server {
                 }
             }
         } catch (IOException e) {
-            System.err.printf("Server: error opening connection: %s%n", e.getMessage());
+            if (!shouldStop) {
+                System.err.printf("Server: error opening connection: %s%n", e.getMessage());
+            }
         }
     }
 
