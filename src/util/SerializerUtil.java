@@ -3,7 +3,7 @@ package util;
 import model.Message;
 
 public class SerializerUtil {
-    private static final char DELIMITER = 0x1F;
+    private static final char DELIMITER = 0x1F; // Unit Separator character
 
     public static String serialize(Message message) {
         return String.join(String.valueOf(DELIMITER), message.from(), message.to(), message.text());

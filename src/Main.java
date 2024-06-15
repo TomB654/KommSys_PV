@@ -1,8 +1,11 @@
+import server.Server;
+
 public class Main {
+    public static final int PORT = 42069;
+
     public static void main(String[] args) {
-        byte b = (byte) ('9' + 'l');
-        char c = (char) 9;
-        System.out.println(b);
-        System.out.println(c);
+        Server.listen(PORT);
+        //TODO Demo
+        Server.stop();
     }
 }
