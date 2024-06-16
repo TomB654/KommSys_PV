@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package de.tom;
+
+message Message {
+  ClientId from = 1;
+  ClientId to = 2;
+  string text = 3;
+}
+
+message ClientId {
+  string name = 1;
+}

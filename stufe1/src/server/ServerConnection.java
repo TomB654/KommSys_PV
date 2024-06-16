@@ -1,7 +1,6 @@
 package server;
 
 import model.Message;
-import util.SerializerUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,20 +10,21 @@ import java.net.Socket;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import static server.Server.queues;
 import static server.Server.openConnections;
+import static server.Server.queues;
+import static util.SerializerUtil.deserialize;
+import static util.SerializerUtil.serialize;
 
 public class ServerConnection implements Runnable {
-    private final String name;
+    private volatile String name;
     private final Socket socket;
+    private final BufferedReader in;
+    private final PrintWriter out;
 
     public ServerConnection(Socket socket) throws IOException {
         this.socket = socket;
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            name = in.readLine();
-        }
-        openConnections.put(name, this);
-        sendPendingMessages();
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
     }
 
     private void sendPendingMessages() {
@@ -37,10 +37,15 @@ public class ServerConnection implements Runnable {
 
     @Override
     public void run() {
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+        try {
+            name = in.readLine();
+            openConnections.put(name, this);
+            System.out.printf("Server: connected to %s%n", name);
+            sendPendingMessages();
+
             String line;
             while ((line = in.readLine()) != null) {
-                Message msg = SerializerUtil.deserialize(line);
+                Message msg = deserialize(line);
                 handleMessage(msg);
             }
         } catch (IOException e) {
@@ -73,12 +78,8 @@ public class ServerConnection implements Runnable {
     }
 
     private synchronized void writeMessage(Message msg) {
-        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
-            String msgStr = SerializerUtil.serialize(msg);
-            out.println(msgStr);
-        } catch (IOException e) {
-            System.err.printf("Server: error writing to socket: %s%n", e.getMessage());
-        }
+        String msgStr = serialize(msg);
+        out.println(msgStr);
     }
 
     private void onClose() {
@@ -86,8 +87,10 @@ public class ServerConnection implements Runnable {
         if (!socket.isClosed()) {
             try {
                 socket.close();
+                in.close();
+                out.close();
             } catch (IOException e) {
-                System.err.printf("Server: error closing socket: %s%n", e.getMessage());
+                System.err.printf("Server: error closing connection: %s%n", e.getMessage());
             }
         }
     }
