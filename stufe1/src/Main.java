@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
-    private static final int PORT = 42069;
+    private static final int PORT = 54321;
 
     private static final String ALICE = "Alice";
     private static final String BOB = "Bob";
